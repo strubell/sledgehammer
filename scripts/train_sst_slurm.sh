@@ -5,7 +5,7 @@ mkdir -p ${JOBSCRIPTS}
 queue=dev
 #queue=learnfair
 MEM="8g"
-SAVE_ROOT=$PROJ_ROOT/slurm
+SAVE_ROOT=$PROJ_ROOT/slurm-$timestamp
 
 working_dir="/private/home/strubell/research/sledgehammer/models"
 data_dir="/private/home/strubell/research/sledgehammer/data_dir"
@@ -39,8 +39,8 @@ for jobid in $( seq 0 1 ); do
           -l $layers \\
           --data_dir $data_dir \\
           -d $dataset \\
-          -w $working_dir" \
+          -w $SAVE" \
     >> ${SCRIPT}
-    echo "Writing output: $SAVE/$timestamp.out"
+    echo "Writing output: $SAVE/train.log"
     sbatch ${SLURM}
 done
