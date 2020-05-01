@@ -14,7 +14,7 @@ dataset="SST-2"
 layers="0_3_5_11"
 bert_model="bert-base-uncased"
 
-for jobid in $( seq 0 1 ); do
+for jobid in $( seq 0 9 ); do
     cname="${dataset}_${bert_model}_${jobid}"
     SAVE="${SAVE_ROOT}/${cname}"
     mkdir -p ${SAVE}
