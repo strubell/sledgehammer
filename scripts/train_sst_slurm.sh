@@ -23,8 +23,8 @@ for jobid in $( seq 0 1 ); do
     echo "#!/bin/sh" > ${SCRIPT}
     echo "#!/bin/sh" > ${SLURM}
     echo "#SBATCH --job-name=$cname" >> ${SLURM}
-    echo "#SBATCH --output=$SAVE/$timestamp.out" >> ${SLURM}
-    echo "#SBATCH --error=$SAVE/$timestamp.err" >> ${SLURM}
+    echo "#SBATCH --output=$SAVE/train.log" >> ${SLURM}
+    echo "#SBATCH --error=$SAVE/train.err" >> ${SLURM}
     echo "#SBATCH --signal=USR1@120" >> ${SLURM}
     echo "#SBATCH --partition=${queue}" >> ${SLURM}
     echo "#SBATCH --mem=$MEM" >> ${SLURM}
