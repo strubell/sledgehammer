@@ -29,11 +29,13 @@ def main():
         cwd = os.getcwd()+"/"
 
         training_config_file = cwd+"training_config/sledgehammer_bert_classification.jsonnet"
-        base_path = args.data_dir+"/text_cat/" 
+        base_path = args.data_dir+"/text_cat/"
         if args.nli:
             training_config_file = cwd+"training_config/sledgehammer_bert_nli.jsonnet"
-            base_path = args.data_dir+"/nli/" 
-             
+            base_path = args.data_dir+"/nli/"
+
+        if args.training_config_file:
+            training_config_file = args.training_config_file
 
         slurm = args.slurm
 
@@ -130,6 +132,7 @@ def arg_parser():
     p.add_argument('-w', '--work_dir', help="Working directory. Should contain a directory for the bert_type, which contains another directory for the dataset", type=str, default="")
     p.add_argument('--data_dir', help="Dataset directory. Should contain 'text_cat' and/or 'nli' folders, containing a directory for the dataset, which contains three files: train, dev and test",  type=str, required=True)
     p.add_argument("-u", "--cuda_device", help="CUDA device (or -1 for CPU)", type=int, default=0)
+    p.add_argument("--training-config-file", help="Training config json file.", type=str, default="")
 
 
     return  ArgumentParser(description=__doc__,

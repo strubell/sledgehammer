@@ -46,6 +46,7 @@ class MultilossBertForClassification(MultilossBert):
     def __init__(self,
                  vocab: Vocabulary,
                  bert_model: Union[str, LayeredPretrainedBertModel],
+                 loss: str = "CrossEntropyLoss",
                  dropout: float = 0.0,
                  num_labels: int = None,
                  index: str = "bert",
@@ -65,7 +66,11 @@ class MultilossBertForClassification(MultilossBert):
 
         self._accuracy = CategoricalAccuracy()
 
+        # todo: automatically get fn from string
+        self.loss = loss
         self._loss = torch.nn.CrossEntropyLoss()
+        if self.loss == "MultiLabelMarginLoss":
+            self._loss = torch.nn.MultiLabelMarginLoss()
 
         self.print_selected_layer = print_selected_layer
 
@@ -178,7 +183,14 @@ class MultilossBertForClassification(MultilossBert):
             else:
                 for i in range(n_layers):
                     logits = logit_list[i]
-                    loss = self._loss(logits, label.long().view(-1))
+                    labels = label.long().view(-1)
+                    if self.loss == "MultiLabelMarginLoss":
+                        labels_padded = torch.ones(logits.size(), dtype=torch.long).cuda() * -1
+                        labels_padded[:, 0] = labels
+                        labels = labels_padded
+                    # loss = self._loss(logits, labels_padded, reduction='none')
+                    loss = self._loss(logits, labels)
+
                     loss_list.append(loss)
 
             if not self.training and len(self._layer_indices) > 1 and self._debug:
