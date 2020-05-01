@@ -75,11 +75,12 @@ def main():
                 cmd = allennlp_cmd
             else:
                 local_extra_args += ",SEED={},PYTORCH_SEED={},NUMPY_SEED={},DROPOUT={},LEARNING_RATE={}".format(seed,seed,seed,dr,lr)
-                cmd = "srun -p allennlp_hipri -w {} --gpus=1 {} {}".format(slurm, local_extra_args, allennlp_cmd)
+                cmd = "srun -p {} --gpus=1 {} {}".format(slurm, local_extra_args, allennlp_cmd)
 
-            print(cmd)
+            print(cmd.split())
+            my_env = os.environ
 
-            return_value = subprocess.call(cmd, shell=True)
+            return_value = subprocess.call(cmd.split(), env=my_env, shell=False)
 
             if return_value != 0:
                 for j in range(200):
