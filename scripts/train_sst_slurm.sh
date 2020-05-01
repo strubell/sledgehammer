@@ -11,8 +11,10 @@ working_dir="/private/home/strubell/research/sledgehammer/models"
 data_dir="/private/home/strubell/research/sledgehammer/data_dir"
 dataset="SST-2"
 
-layers="0_3_5_11"
-bert_model="bert-base-uncased"
+#layers="0_3_5_11"
+#bert_model="bert-base-uncased"
+layers="0_4_12_23"
+ert_model="bert-large-uncased"
 
 for jobid in $( seq 0 9 ); do
     cname="${dataset}_${bert_model}_${jobid}"
