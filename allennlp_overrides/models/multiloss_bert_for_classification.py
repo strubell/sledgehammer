@@ -71,6 +71,7 @@ class MultilossBertForClassification(MultilossBert):
         self._loss = torch.nn.CrossEntropyLoss()
         if self.loss == "MultiLabelMarginLoss":
             self._loss = torch.nn.MultiLabelMarginLoss()
+        print("training w/ loss: {}".format(self.loss))
 
         self.print_selected_layer = print_selected_layer
 
