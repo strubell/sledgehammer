@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ORIG_DATA_DIR="/private/home/strubell/research/data/glue_data/"
+ORIG_DATA_DIR="/private/home/strubell/research/data/glue_data"
 LOCAL_DATA_DIR="data_dir/text_cat"
 
 DATASET="SST-2"
