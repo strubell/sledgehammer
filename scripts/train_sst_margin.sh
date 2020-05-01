@@ -10,7 +10,7 @@ dataset="SST-2"
 layers="0_3_5_11"
 bert_model="bert-base-uncased"
 
-config_file="sledgehammer_bert_classification_margin.jsonnet"
+config_file="training_config/sledgehammer_bert_classification_margin.jsonnet"
 
 batch_size=72
 
