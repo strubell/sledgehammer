@@ -39,7 +39,7 @@ for jobid in $( seq 0 1 ); do
           -l $layers \\
           --data_dir $data_dir \\
           -d $dataset \\
-          -w $working_dir"
+          -w $working_dir" \
     >> ${SCRIPT}
     echo "Writing output: $SAVE/$timestamp.out"
     sbatch ${SLURM}
