@@ -32,7 +32,9 @@ for jobid in $( seq 0 9 ); do
     echo "#SBATCH --mem=$MEM" >> ${SLURM}
     echo "#SBATCH --gres=gpu:1" >> ${SLURM}
     echo "#SBATCH --time=12:00:00" >> ${SLURM}
-#    echo "#SBATCH --constraint=volta32gb" >> ${SLURM}
+    if [[ $cname =~ "large" ]]; then
+        echo "#SBATCH --constraint=volta32gb" >> ${SLURM}
+    fi
     echo "srun sh ${SCRIPT}" >> ${SLURM}
     echo "echo $cname " >> ${SCRIPT}
     echo "cd $PROJ_ROOT" >> ${SCRIPT}
