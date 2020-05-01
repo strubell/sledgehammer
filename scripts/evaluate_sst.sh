@@ -13,11 +13,10 @@ model_dir="$working_dir/$bert_model/$dataset/experiment_${layers}_0"
 
 temperatures="1.2011244297027588_1.224867582321167_1.24701726436615_1.2987957000732422"
 
-confidences="0.1 0.3 0.5 0.7 0.9 1.0"
-for confidence in $confidences; do
+for confidence in $( seq 55 100 ); do
   python scripts/run_evaluation.py  \
   -t $temperatures \
-  -c $confidence \
+  -c $( bc -l <<< "$confidence / 100" ) \
   -v "$data_dir/text_cat/$dataset/dev" \
   -o "$model_dir/eval" \
   -m "$model_dir/best.th" \
