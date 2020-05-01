@@ -1,5 +1,7 @@
 #!/bin/bash
 
+other_args=$@
+
 #working_dir="/checkpoint/strubell/sledgehammer"
 working_dir="/private/home/strubell/research/slegehammer/models"
 data_dir="/private/home/strubell/research/slegehammer/data_dir"
@@ -12,4 +14,5 @@ python scripts/train_model.py \
 -l 0_3_5_11 \
 --data_dir $data_dir \
 -d $dataset \
--w $working_dir
+-w $working_dir \
+$other_args
