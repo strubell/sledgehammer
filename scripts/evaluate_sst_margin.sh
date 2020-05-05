@@ -10,7 +10,7 @@ bert_model="bert-base-uncased"
 layers="0_3_5_11"
 
 #model_dir="$working_dir/$bert_model/$dataset/experiment_${layers}_0"
-experiment="margin-early-exit-shared-nopool"
+experiment="margin-early-exit-shared"
 model_dir="$working_dir/$experiment/$bert_model/$dataset/experiment_${layers}_0"
 
 # dummy temps
