@@ -8,7 +8,7 @@ dataset="SST-2"
 
 bert_model="bert-base-uncased"
 layers="0_3_5_11"
-margin="5.0"
+margin="1.0"
 
 #model_dir="$working_dir/$bert_model/$dataset/experiment_${layers}_0"
 experiment="margin-$margin-early-exit-shared"
