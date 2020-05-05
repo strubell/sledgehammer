@@ -7,7 +7,15 @@ working_dir="/private/home/strubell/research/sledgehammer/models"
 data_dir="/private/home/strubell/research/sledgehammer/data_dir"
 dataset="SST-2"
 
+experiment_name="margin-early-exit-shared"
+export EARLY_EXIT="true"
+export SHARE_CLASSIFIERS="true"
+export POOL_LAYERS="true"
+
 layers="0_3_5_11"
+#layers="0_1_2_3_4_5_6_7_8_9_10_11"
+num_epochs=5
+
 bert_model="bert-base-uncased"
 
 config_file="training_config/sledgehammer_bert_classification_margin.jsonnet"
@@ -20,7 +28,8 @@ python scripts/train_model.py \
 -l $layers \
 --data_dir $data_dir \
 -d $dataset \
--w $working_dir \
+-w "$working_dir/$experiment_name" \
 -b $batch_size \
 --training-config-file $config_file \
+--num_epochs $num_epochs \
 $other_args

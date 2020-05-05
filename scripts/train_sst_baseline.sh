@@ -7,10 +7,14 @@ working_dir="/private/home/strubell/research/sledgehammer/models"
 data_dir="/private/home/strubell/research/sledgehammer/data_dir"
 dataset="SST-2"
 
+experiment_name="baseline"
+
 layers="0_3_5_11"
 bert_model="bert-base-uncased"
 
 batch_size=72
+
+config_file="training_config/sledgehammer_bert_classification.jsonnet"
 
 #srun --gres=gpu:1 --constraint=volta32gb --time=12:00:00
 python scripts/train_model.py \
@@ -18,6 +22,7 @@ python scripts/train_model.py \
 -l $layers \
 --data_dir $data_dir \
 -d $dataset \
--w $working_dir \
+-w "$working_dir/$experiment_name" \
 -b $batch_size \
+--training-config-file $config_file \
 $other_args

@@ -2,6 +2,7 @@
 
 import subprocess
 import sys
+import os
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
 
@@ -12,14 +13,26 @@ def main():
     
     serialization_dir = "/".join(args.model_file.split("/")[:-1])
 
-    cmd = "python allennlp_overrides/commands/evaluate.py {} {} ".format(serialization_dir, args.dev_file)+\
-        "--include-package allennlp_overrides --cuda-device {} ".format(args.cuda_device)+\
+    # cwd = os.getcwd() + "/"
+    #
+    # training_config_file = cwd + "training_config/sledgehammer_bert_classification.jsonnet"
+    # base_path = args.data_dir + "/text_cat/"
+    # if args.nli:
+    #     training_config_file = cwd + "training_config/sledgehammer_bert_nli.jsonnet"
+    #     base_path = args.data_dir + "/nli/"
+    #
+    # if args.training_config_file:
+    #     training_config_file = args.training_config_file
+
+
+    cmd = "python allennlp_overrides/commands/evaluate.py {} {} ".format(serialization_dir, args.dev_file) + \
+        "--include-package allennlp_overrides --cuda-device {} ".format(args.cuda_device) + \
         " -o "+'"{'+" iterator: "+'{'+"batch_size: 1"+'}'+", model: "+'{'+\
             "temperature_threshold: 1, scaling_temperature: '{}'".format(args.temperatures)+\
             '}}"'+" --weights-file {} -t \"{}\" --output-file {};".format(
             args.model_file, args.confidence_threshold, args.output_file)
 
-    print (cmd)
+    print(cmd)
     return_value = subprocess.call(cmd, shell=True)
 
     if return_value != 0:

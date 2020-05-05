@@ -33,7 +33,10 @@
     "temperature_threshold": std.extVar("TEMPERATURE_THRESHOLD"),
     "add_previous_layer_logits": std.extVar("ADD_PREVIOUS_LAYER_LOGITS"),
     "multitask": std.extVar("MULTITASK"),
-    "loss": "MultiLabelMarginLoss"
+    "loss": "MultiLabelMarginLoss",
+    "share_classifiers": std.extVar("SHARE_CLASSIFIERS"),
+    "early_exit_during_training": std.extVar("EARLY_EXIT"),
+    "pool_layers": std.extVar("POOL_LAYERS")
   },
   "validation_iterator": {
     "type": "bucket",

@@ -109,6 +109,9 @@ class MultilossBert(Model):
 
         if previous_pooled is not None:
             pooled = torch.cat([previous_pooled, pooled])
+        else:
+            # just grab the last one
+            pooled = pooled[-1, :].unsqueeze(0)
 
         return encoded_layer[-1], pooled
 

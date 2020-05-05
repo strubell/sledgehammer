@@ -54,7 +54,7 @@ from typing import Dict, Any
 import argparse
 import logging
 import json
-
+import time
 
 from allennlp.commands.subcommand import Subcommand
 from allennlp.common.util import prepare_environment
@@ -138,6 +138,8 @@ def evaluate_from_args(args: argparse.Namespace) -> Dict[str, Any]:
     model = archive.model
     model.eval()
 
+    print("config: ", config.as_dict())
+
     # Load the evaluation data
 
     # Try to use the validation dataset reader if there is one - otherwise fall back
@@ -168,7 +170,10 @@ def evaluate_from_args(args: argparse.Namespace) -> Dict[str, Any]:
 
     for thr in thrs:
         model._temperature_threshold = float(thr)
+        start_time = time.time_ns()
         metrics = evaluate(model, instances, iterator, args.cuda_device, args.batch_weight_key)
+        elapsed_time = time.time_ns() - start_time
+        metrics['time'] = elapsed_time / 1e6  # convert from nanoseconds to milliseconds
 
         logger.info("Finished evaluating.")
         logger.info("Metrics:")
@@ -177,7 +182,7 @@ def evaluate_from_args(args: argparse.Namespace) -> Dict[str, Any]:
 
         output_file = args.output_file
         if output_file:
-            with open(output_file+"_"+thr, "w") as file:
+            with open(output_file + "_" + thr, "w") as file:
                 json.dump(metrics, file, indent=4)
     return metrics
 

@@ -65,7 +65,7 @@ def main():
             lr = str(lrs[random.randint(0, len(lrs))-1])
             dr = str(random.uniform(dropout[0], dropout[1]))
             seed = str(random.randint(0,100000))
-            local_dir = args.work_dir+args.bert_type+"/"+dataset+"/experiment_{}_{}/".format(layer_indices, i)
+            local_dir = args.work_dir + "/" + args.bert_type + "/" + dataset + "/experiment_{}_{}/".format(layer_indices, i)
             local_extra_args = copy.copy(extra_args)
             allennlp_cmd = "allennlp train {} --serialization-dir {} --include-package allennlp_overrides -f".format(training_config_file, local_dir)
             if slurm is None:
