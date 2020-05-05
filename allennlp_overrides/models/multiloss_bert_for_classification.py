@@ -203,10 +203,10 @@ class MultilossBertForClassification(MultilossBert):
                 print("id {} li {} is_correct {} label {} logits {} probs {}".format(instance_id[0], n_layers, (torch.argmax(logits[0]).item() == label.long()).item(), label[0].item(), logits[0], probs[0]))
 
         def compute_single_loss(logits, labels):
-            if self.loss == "MultiLabelMarginLoss":
-                labels_padded = torch.ones(logits.size(), dtype=torch.long).cuda() * -1
-                labels_padded[:, 0] = labels
-                labels = labels_padded
+            # if self.loss == "MultiLabelMarginLoss":
+            #     labels_padded = torch.ones(logits.size(), dtype=torch.long).cuda() * -1
+            #     labels_padded[:, 0] = labels
+            #     labels = labels_padded
             return self._loss(logits, labels)
 
         if label is not None:
