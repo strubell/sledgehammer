@@ -10,8 +10,8 @@ dataset="SST-2"
 export EARLY_EXIT="true"
 export SHARE_CLASSIFIERS="true"
 export POOL_LAYERS="true"
-export MARGIN="5.0"
-experiment_name="margin-$MARGIN-early-exit-shared"
+margin="5.0"
+experiment_name="margin-$margin-early-exit-shared"
 
 layers="0_3_5_11"
 #layers="0_1_2_3_4_5_6_7_8_9_10_11"
@@ -33,4 +33,5 @@ python scripts/train_model.py \
 -b $batch_size \
 --training-config-file $config_file \
 --num_epochs $num_epochs \
+--margin $margin \
 $other_args

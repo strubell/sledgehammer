@@ -57,6 +57,7 @@ def main():
             os.environ["ADD_PREVIOUS_LAYER_LOGITS"] = 'false'
             os.environ["MULTITASK"] = 'false'
             os.environ["NUM_EPOCHS"] = str(args.num_epochs)
+            os.environ["MARGIN"] = str(args.margin)
         else:
             extra_args = "--export BERT_TYPE={},IS_LOWERCASE={},TRAIN_PATH={},DEV_PATH={},TEST_PATH={},LAYER_INDICES={},CUDA_DEVICE={},SCALING_TEMPERATURE={},BATCH_SIZE={},MAX_PIECES={},TEMPERATURE_THRESHOLD={},ADD_PREVIOUS_LAYER_LOGITS={},MULTITASK={},NUM_EPOCHS={}".format(args.bert_type,str(is_lowercase).lower(),base_path+dataset+"/train",base_path+dataset+"/dev",base_path+dataset+"/test","'"+layer_indices+"'",0,"'"+"_".join(["1"  for i in range(len(layer_indices.split("_")))])+"'",args.batch_size,args.max_pieces,exit_threshold,'false','false',args.num_epochs)  
 
@@ -133,6 +134,7 @@ def arg_parser():
     p.add_argument('--data_dir', help="Dataset directory. Should contain 'text_cat' and/or 'nli' folders, containing a directory for the dataset, which contains three files: train, dev and test",  type=str, required=True)
     p.add_argument("-u", "--cuda_device", help="CUDA device (or -1 for CPU)", type=int, default=0)
     p.add_argument("--training-config-file", help="Training config json file.", type=str, default="")
+    p.add_argument("--margin", help="Margin for hinge loss.", type=float, default=1.0)
 
 
     return  ArgumentParser(description=__doc__,

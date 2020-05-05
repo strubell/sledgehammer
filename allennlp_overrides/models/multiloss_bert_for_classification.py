@@ -74,8 +74,7 @@ class MultilossBertForClassification(MultilossBert):
         self.loss = loss
         self.margin = margin
         self._loss = torch.nn.CrossEntropyLoss(reduction='none')
-        if self.loss == "MultiLabelMarginLoss":
-            # self._loss = torch.nn.MultiLabelMarginLoss(reduction='none')
+        if self.loss == "MultiMarginLoss":
             self._loss = torch.nn.MultiMarginLoss(margin=self.margin, reduction='none')
         print("training w/ loss: {}".format(self.loss))
 
@@ -166,7 +165,7 @@ class MultilossBertForClassification(MultilossBert):
             elif self.loss == "CrossEntropyLoss" and ((gold_layer is None and torch.max(probs) >= self._temperature_threshold) or \
                     (gold_layer is not None and gold_layer == 0)):
                 n_layers = 1
-            elif self.loss == "MultiLabelMarginLoss" and ((gold_layer is None and self.has_margin(logits, self._temperature_threshold)) or \
+            elif self.loss == "MultiMarginLoss" and ((gold_layer is None and self.has_margin(logits, self._temperature_threshold)) or \
                     (gold_layer is not None and gold_layer == 0)):
                 n_layers = 1
 #            print("li{}: logits={}, probs={}, thr={}".format(0, logits, probs, self._temperature_threshold))
@@ -192,7 +191,7 @@ class MultilossBertForClassification(MultilossBert):
                     n_layers = i+1
                     break
                 # new method w/ margin loss checks margin
-                elif self.loss == "MultiLabelMarginLoss" and ((gold_layer is None and self.has_margin(logits, self._temperature_threshold)) or \
+                elif self.loss == "MultiMarginLoss" and ((gold_layer is None and self.has_margin(logits, self._temperature_threshold)) or \
                     (gold_layer is not None and gold_layer == i)):
                     n_layers = i+1
                     break
@@ -202,13 +201,6 @@ class MultilossBertForClassification(MultilossBert):
             if self.print_selected_layer:
                 print("id {} li {} is_correct {} label {} logits {} probs {}".format(instance_id[0], n_layers, (torch.argmax(logits[0]).item() == label.long()).item(), label[0].item(), logits[0], probs[0]))
 
-        def compute_single_loss(logits, labels):
-            # if self.loss == "MultiLabelMarginLoss":
-            #     labels_padded = torch.ones(logits.size(), dtype=torch.long).cuda() * -1
-            #     labels_padded[:, 0] = labels
-            #     labels = labels_padded
-            return self._loss(logits, labels)
-
         if label is not None:
             loss_list = []
             loss = None
@@ -217,15 +209,15 @@ class MultilossBertForClassification(MultilossBert):
             if self._multitask or n_layers == 1:
                 logits = logit_list[-1] 
                 # loss = self._loss(logits, label.long().view(-1))
-                loss = compute_single_loss(logits,  label.long().view(-1))
+                loss = self._loss(logits,  label.long().view(-1))
             else:
                 nonzero_mask = torch.ones(input_mask.size()[0], dtype=torch.bool).cuda()
                 for i in range(n_layers):
                     logits = logit_list[i]
                     # todo WHY do labels need to be computed in here??
-                    loss = compute_single_loss(logits, label.long().view(-1))
+                    loss = self._loss(logits, label.long().view(-1))
                     if self.early_exit_during_training:
-                        # this only works with MultiLabelMarginLoss: if loss == 0, then we had a margin w/ gold label
+                        # this only works with MultiMarginLoss: if loss == 0, then we had a margin w/ gold label
                         loss_nonzero_bool = loss != 0
                         nonzero_mask = nonzero_mask * loss_nonzero_bool
                         loss_nonzero = loss[nonzero_mask].sum()
@@ -279,7 +271,7 @@ class MultilossBertForClassification(MultilossBert):
             logits = self._classification_layers[layer_index](weighted_pooled) # / self._scaling_temperatures[layer_index]
 
         # only divide by scaling temps if using xent loss
-        if self.loss != "MultiLabelMarginLoss":
+        if self.loss != "MultiMarginLoss":
             logits = logits / self._scaling_temperatures[layer_index]
 
         logit_list.append(logits)
