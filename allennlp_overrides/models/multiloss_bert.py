@@ -93,7 +93,7 @@ class MultilossBert(Model):
             self._sum_weights[i] = torch.nn.Parameter(torch.nn.functional.normalize(self._sum_weights[i], p=2, dim=0)) # unit length
         #data[i] = vec / torch.norm(vec)
 
-    def _run_layer(self, input_ids, token_type_ids, input_mask, layer_index, start_index, previous_layer, previous_pooled):
+    def _run_layer(self, input_ids, token_type_ids, input_mask, layer_index, start_index, previous_layer, previous_pooled, pool_layers):
         """Run model on a single layer"""
         encoded_layer, pooled = self.bert_model(input_ids=input_ids,
                                                 token_type_ids=token_type_ids,
@@ -107,11 +107,11 @@ class MultilossBert(Model):
         # pooled in BERT classification task is the CLS tag (i.e., the first element)
         pooled = self._dropout(pooled)
 
-        if previous_pooled is not None:
-            pooled = torch.cat([previous_pooled, pooled])
-        else:
+        if not pool_layers:
             # just grab the last one
             pooled = pooled[-1, :].unsqueeze(0)
+        elif previous_pooled is not None:
+            pooled = torch.cat([previous_pooled, pooled])
 
         return encoded_layer[-1], pooled
 

@@ -163,8 +163,8 @@ class MultilossBertForClassification(MultilossBert):
             elif self.loss == "CrossEntropyLoss" and ((gold_layer is None and torch.max(probs) >= self._temperature_threshold) or \
                     (gold_layer is not None and gold_layer == 0)):
                 n_layers = 1
-            elif (gold_layer is None and self.has_margin(logits, self._temperature_threshold)) or \
-                    (gold_layer is not None and gold_layer == 0):
+            elif self.loss == "MultiLabelMarginLoss" and ((gold_layer is None and self.has_margin(logits, self._temperature_threshold)) or \
+                    (gold_layer is not None and gold_layer == 0)):
                 n_layers = 1
 #            print("li{}: logits={}, probs={}, thr={}".format(0, logits, probs, self._temperature_threshold))
         elif self._multitask:
@@ -189,8 +189,8 @@ class MultilossBertForClassification(MultilossBert):
                     n_layers = i+1
                     break
                 # new method w/ margin loss checks margin
-                elif (gold_layer is None and self.has_margin(logits, self._temperature_threshold)) or \
-                    (gold_layer is not None and gold_layer == i):
+                elif self.loss == "MultiLabelMarginLoss" and ((gold_layer is None and self.has_margin(logits, self._temperature_threshold)) or \
+                    (gold_layer is not None and gold_layer == i)):
                     n_layers = i+1
                     break
 
@@ -256,7 +256,7 @@ class MultilossBertForClassification(MultilossBert):
 
     def _run_layer(self, input_ids, token_type_ids, input_mask, layer_index, start_index, previous_layer, previous_pooled, logit_list):
         """Run model on a single layer"""
-        encoded_layer, pooled = super()._run_layer(input_ids, token_type_ids, input_mask, layer_index, start_index, previous_layer, previous_pooled if self.pool_layers else None)
+        encoded_layer, pooled = super()._run_layer(input_ids, token_type_ids, input_mask, layer_index, start_index, previous_layer, previous_pooled, self.pool_layers)
 
 #        print("pooled={}, sw={}".format(pooled.size(), self._sum_weights[layer_index].size()))
         weighted_pooled = pooled
