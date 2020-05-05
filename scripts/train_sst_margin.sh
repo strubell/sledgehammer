@@ -14,8 +14,8 @@ margin="1.0"
 export MARGIN=$margin
 experiment_name="margin-$margin-early-exit-shared"
 
-layers="0_3_5_11"
-#layers="0_1_2_3_4_5_6_7_8_9_10_11"
+#layers="0_3_5_11"
+layers="0_1_2_3_4_5_6_7_8_9_10_11"
 num_epochs=2
 
 bert_model="bert-base-uncased"
