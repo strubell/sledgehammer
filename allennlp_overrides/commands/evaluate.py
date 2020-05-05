@@ -54,7 +54,7 @@ from typing import Dict, Any
 import argparse
 import logging
 import json
-import time
+from timeit import default_timer as timer
 
 from allennlp.commands.subcommand import Subcommand
 from allennlp.common.util import prepare_environment
@@ -170,10 +170,10 @@ def evaluate_from_args(args: argparse.Namespace) -> Dict[str, Any]:
 
     for thr in thrs:
         model._temperature_threshold = float(thr)
-        start_time = time.time_ns()
+        start_time = timer()
         metrics = evaluate(model, instances, iterator, args.cuda_device, args.batch_weight_key)
-        elapsed_time = time.time_ns() - start_time
-        metrics['time'] = elapsed_time / 1e6  # convert from nanoseconds to milliseconds
+        elapsed_time = timer() - start_time
+        metrics['time'] = elapsed_time 
 
         logger.info("Finished evaluating.")
         logger.info("Metrics:")
