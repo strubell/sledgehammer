@@ -30,7 +30,7 @@
     "dropout": std.extVar("DROPOUT"),
     "layer_indices": std.extVar("LAYER_INDICES"),
     "scaling_temperature": std.extVar("SCALING_TEMPERATURE"),
-    "temperature_threshold": std.extVar("MARGIN"),
+    "temperature_threshold": std.extVar("TEMPERATURE_THRESHOLD"),
     "add_previous_layer_logits": std.extVar("ADD_PREVIOUS_LAYER_LOGITS"),
     "multitask": std.extVar("MULTITASK"),
     "loss": "MultiLabelMarginLoss",
