@@ -29,7 +29,7 @@ def main():
         "--include-package allennlp_overrides --cuda-device {} ".format(args.cuda_device) + \
         " -o "+'"{'+" iterator: "+'{'+"batch_size: 1"+'}'+", model: "+'{'+\
             "temperature_threshold: 1, scaling_temperature: '{}'".format(args.temperatures)+\
-            '}}"'+" --weights-file {} -c \"{}\" --output-file {};".format(
+            '}}"'+" --weights-file {} -t \"{}\" --output-file {};".format(
             args.model_file, args.confidence_threshold, args.output_file)
 
     print(cmd)
