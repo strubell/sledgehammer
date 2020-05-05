@@ -28,7 +28,7 @@ def main():
     cmd = "python allennlp_overrides/commands/evaluate.py {} {} ".format(serialization_dir, args.dev_file) + \
         "--include-package allennlp_overrides --cuda-device {} ".format(args.cuda_device) + \
         " -o "+'"{'+" iterator: "+'{'+"batch_size: 1"+'}'+", model: "+'{'+\
-            "temperature_threshold: 1, scaling_temperature: '{}'".format(args.temperatures)+\
+            "temperature_threshold: {}, scaling_temperature: '{}'".format(args.confidence_threshold, args.temperatures)+\
             '}}"'+" --weights-file {} -t \"{}\" --output-file {};".format(
             args.model_file, args.confidence_threshold, args.output_file)
 
