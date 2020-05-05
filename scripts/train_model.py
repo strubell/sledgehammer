@@ -53,13 +53,13 @@ def main():
             os.environ["SCALING_TEMPERATURE"] = "_".join(["1" for i in range(len(layer_indices.split("_")))])
             os.environ["BATCH_SIZE"] = str(args.batch_size)
             os.environ["MAX_PIECES"] = str(args.max_pieces)
-            os.environ["TEMPERATURE_THRESHOLD"] = str(exit_threshold)
+            os.environ["TEMPERATURE_THRESHOLD"] = str(args.margin)
             os.environ["ADD_PREVIOUS_LAYER_LOGITS"] = 'false'
             os.environ["MULTITASK"] = 'false'
             os.environ["NUM_EPOCHS"] = str(args.num_epochs)
             os.environ["MARGIN"] = str(args.margin)
         else:
-            extra_args = "--export BERT_TYPE={},IS_LOWERCASE={},TRAIN_PATH={},DEV_PATH={},TEST_PATH={},LAYER_INDICES={},CUDA_DEVICE={},SCALING_TEMPERATURE={},BATCH_SIZE={},MAX_PIECES={},TEMPERATURE_THRESHOLD={},ADD_PREVIOUS_LAYER_LOGITS={},MULTITASK={},NUM_EPOCHS={}".format(args.bert_type,str(is_lowercase).lower(),base_path+dataset+"/train",base_path+dataset+"/dev",base_path+dataset+"/test","'"+layer_indices+"'",0,"'"+"_".join(["1"  for i in range(len(layer_indices.split("_")))])+"'",args.batch_size,args.max_pieces,exit_threshold,'false','false',args.num_epochs)  
+            extra_args = "--export BERT_TYPE={},IS_LOWERCASE={},TRAIN_PATH={},DEV_PATH={},TEST_PATH={},LAYER_INDICES={},CUDA_DEVICE={},SCALING_TEMPERATURE={},BATCH_SIZE={},MAX_PIECES={},TEMPERATURE_THRESHOLD={},ADD_PREVIOUS_LAYER_LOGITS={},MULTITASK={},NUM_EPOCHS={}".format(args.bert_type,str(is_lowercase).lower(),base_path+dataset+"/train",base_path+dataset+"/dev",base_path+dataset+"/test","'"+layer_indices+"'",0,"'"+"_".join(["1"  for i in range(len(layer_indices.split("_")))])+"'",args.batch_size,args.max_pieces,str(args.margin),'false','false',args.num_epochs)
 
         for i in range(start, n_test):
             #lr = str(10**random.uniform(lrs[0], lrs[1]))

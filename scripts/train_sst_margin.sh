@@ -12,7 +12,6 @@ export SHARE_CLASSIFIERS="true"
 export POOL_LAYERS="true"
 margin="2.0"
 export MARGIN=$margin
-export TEMPERATURE_THRESHOLD=$margin
 experiment_name="margin-$margin-early-exit-shared"
 
 layers="0_3_5_11"
