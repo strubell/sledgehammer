@@ -10,7 +10,7 @@ dataset="SST-2"
 export EARLY_EXIT="true"
 export SHARE_CLASSIFIERS="true"
 export POOL_LAYERS="true"
-margin="2.0"
+margin="5.0"
 export MARGIN=$margin
 experiment_name="margin-$margin-early-exit-shared"
 
