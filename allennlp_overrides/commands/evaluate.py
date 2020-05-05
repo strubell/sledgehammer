@@ -173,7 +173,7 @@ def evaluate_from_args(args: argparse.Namespace) -> Dict[str, Any]:
         start_time = timer()
         metrics = evaluate(model, instances, iterator, args.cuda_device, args.batch_weight_key)
         elapsed_time = timer() - start_time
-        metrics['time'] = elapsed_time 
+        metrics['time'] = elapsed_time
 
         logger.info("Finished evaluating.")
         logger.info("Metrics:")

@@ -9,7 +9,8 @@ dataset="SST-2"
 bert_model="bert-base-uncased"
 layers="0_3_5_11"
 
-model_dir="$working_dir/$bert_model/$dataset/experiment_${layers}_0"
+experiment="baseline"
+model_dir="$working_dir/$experiment/$bert_model/$dataset/experiment_${layers}_0"
 
 temperatures="1.2011244297027588_1.224867582321167_1.24701726436615_1.2987957000732422"
 
