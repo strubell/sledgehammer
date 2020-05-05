@@ -12,7 +12,7 @@ layers="0_3_5_11"
 experiment="baseline"
 model_dir="$working_dir/$experiment/$bert_model/$dataset/experiment_${layers}_0"
 
-temperatures="1.2443257570266724_1.3058441877365112_1.2728321552276611_1.3453887701034546"
+temperatures="1.544136643409729_1.584019660949707_1.6111353635787964_1.582806944847107"
 
 for confidence in $( seq 55 5 100 ); do
   python scripts/run_evaluation.py  \
