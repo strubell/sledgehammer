@@ -16,7 +16,7 @@ model_dir="$working_dir/$experiment/$bert_model/$dataset/experiment_${layers}_0"
 # dummy temps
 temperatures="1_1_1_1"
 
-for confidence in $( seq 55 5 55 ); do
+for confidence in $( seq 55 5 100 ); do
   python scripts/run_evaluation.py  \
   -t $temperatures \
   -c $( bc -l <<< "$confidence / 100" ) \
