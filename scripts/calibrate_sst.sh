@@ -9,7 +9,10 @@ dataset="SST-2"
 bert_model="bert-base-uncased"
 layers="0_3_5_11"
 
+experiment="baseline"
+model="$working_dir/$experiment/$bert_model/$dataset/experiment_${layers}_0/best.th"
+
 python scripts/run_calibration.py \
--m "$working_dir/$bert_model/$dataset/experiment_${layers}_0/best.th" \
+-m $model \
 -v "$data_dir/text_cat/$dataset/dev" \
 $other_args
