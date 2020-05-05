@@ -47,6 +47,7 @@ class MultilossBertForClassification(MultilossBert):
                  vocab: Vocabulary,
                  bert_model: Union[str, LayeredPretrainedBertModel],
                  loss: str = "CrossEntropyLoss",
+                 margin: float = 1.0,
                  share_classifiers: bool = False,
                  early_exit_during_training: bool = False,
                  pool_layers: bool = True,
@@ -71,9 +72,11 @@ class MultilossBertForClassification(MultilossBert):
 
         # todo: automatically get fn from string
         self.loss = loss
+        self.margin = margin
         self._loss = torch.nn.CrossEntropyLoss(reduction='none')
         if self.loss == "MultiLabelMarginLoss":
-            self._loss = torch.nn.MultiLabelMarginLoss(reduction='none')
+            # self._loss = torch.nn.MultiLabelMarginLoss(reduction='none')
+            self._loss = torch.nn.MultiMarginLoss(margin=self.margin, reduction='none')
         print("training w/ loss: {}".format(self.loss))
 
         self.share_classifiers = share_classifiers

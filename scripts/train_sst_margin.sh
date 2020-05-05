@@ -11,6 +11,7 @@ experiment_name="margin-early-exit-shared"
 export EARLY_EXIT="true"
 export SHARE_CLASSIFIERS="true"
 export POOL_LAYERS="true"
+export MARGIN="1.0"
 
 layers="0_3_5_11"
 #layers="0_1_2_3_4_5_6_7_8_9_10_11"
