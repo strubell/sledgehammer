@@ -19,5 +19,5 @@ for split in test; do
   f="$ORIG_DATASET_DIR/$split.tsv"
   echo "Processing: $f"
   # todo: get the actual labels
-  tail -n +2 $f | awk '{label=0; print label"\t"$0}' > "$LOCAL_DATASET_DIR/$split"
+  tail -n +2 $f | awk '{label=0; $1="\t"; print label$0}' > "$LOCAL_DATASET_DIR/$split"
 done
