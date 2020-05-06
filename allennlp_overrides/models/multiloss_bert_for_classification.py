@@ -50,6 +50,7 @@ class MultilossBertForClassification(MultilossBert):
                  margin: float = 1.0,
                  share_classifiers: bool = False,
                  early_exit_during_training: bool = False,
+                 gold_exit_during_test: bool = False,
                  pool_layers: bool = True,
                  dropout: float = 0.0,
                  num_labels: int = None,
@@ -69,6 +70,7 @@ class MultilossBertForClassification(MultilossBert):
                         temperature_threshold, layer_indices, multitask, debug, add_previous_layer_logits, initializer)
 
         self._accuracy = CategoricalAccuracy()
+        self._accuracy_max = CategoricalAccuracy()
 
         # todo: automatically get fn from string
         self.loss = loss
@@ -77,6 +79,8 @@ class MultilossBertForClassification(MultilossBert):
         if self.loss == "MultiMarginLoss":
             self._loss = torch.nn.MultiMarginLoss(margin=self.margin, reduction='none')
         print("training w/ loss: {}".format(self.loss))
+
+        self.gold_exit_during_test = gold_exit_during_test
 
         self.share_classifiers = share_classifiers
         num_classifiers = len(self._layer_indices)
@@ -100,17 +104,27 @@ class MultilossBertForClassification(MultilossBert):
         else:
             self.ensemble = None
 
-
         self._classification_layers = torch.nn.ModuleList([torch.nn.Linear(in_features+(i*out_features*add_previous_layer_logits), out_features)
                                                             for i in range(num_classifiers)])
         for l in self._classification_layers:
             initializer(l)
 
-    def has_margin(self, logits, m=1.0):
+    def has_margin(self, logits, m=1.0, label=None):
         top2_vals, _ = logits.topk(2, dim=-1)
         # print("top2: {}".format(top2_vals))
         diff = top2_vals[0][0] - top2_vals[0][1]
+        if label:
+            label_val = logits[0][label]
+            argmax = logits.argmax()
+            if argmax != label:
+                diff = label_val - top2_vals[0][0]
         return diff >= m
+
+    def early_exit_xent(self, probs, thr, label=None):
+        if label:
+            return probs[0][label] >= thr
+        else:
+            return torch.max(probs) >= thr
 
     def forward(self,  # type: ignore
                 tokens: Dict[str, torch.LongTensor],
@@ -162,10 +176,10 @@ class MultilossBertForClassification(MultilossBert):
 
             if self.ensemble is not None:
                 ensemble = self.ensemble[0]*copy.deepcopy(probs)
-            elif self.loss == "CrossEntropyLoss" and ((gold_layer is None and torch.max(probs) >= self._temperature_threshold) or \
+            elif self.loss == "CrossEntropyLoss" and ((gold_layer is None and self.early_exit_xent(probs, self._temperature_threshold, label if self.gold_exit_during_test else None)) or \
                     (gold_layer is not None and gold_layer == 0)):
                 n_layers = 1
-            elif self.loss == "MultiMarginLoss" and ((gold_layer is None and self.has_margin(logits, self._temperature_threshold)) or \
+            elif self.loss == "MultiMarginLoss" and ((gold_layer is None and self.has_margin(logits, self._temperature_threshold, label if self.gold_exit_during_test else None)) or \
                     (gold_layer is not None and gold_layer == 0)):
                 n_layers = 1
 #            print("li{}: logits={}, probs={}, thr={}".format(0, logits, probs, self._temperature_threshold))
@@ -186,12 +200,12 @@ class MultilossBertForClassification(MultilossBert):
                 if ensemble is not None:
                     ensemble += self.ensemble[i]*probs
                 # old method w/ xent loss checks temp
-                elif self.loss == "CrossEntropyLoss" and ((gold_layer is None and torch.max(probs) >= self._temperature_threshold) or \
+                elif self.loss == "CrossEntropyLoss" and ((gold_layer is None and self.early_exit_xent(probs, self._temperature_threshold, label if self.gold_exit_during_test else None)) or \
                     (gold_layer is not None and gold_layer == i)):
                     n_layers = i+1
                     break
                 # new method w/ margin loss checks margin
-                elif self.loss == "MultiMarginLoss" and ((gold_layer is None and self.has_margin(logits, self._temperature_threshold)) or \
+                elif self.loss == "MultiMarginLoss" and ((gold_layer is None and self.has_margin(logits, self._temperature_threshold, label if self.gold_exit_during_test else None)) or \
                     (gold_layer is not None and gold_layer == i)):
                     n_layers = i+1
                     break
@@ -207,21 +221,43 @@ class MultilossBertForClassification(MultilossBert):
             logits = None
 
             if self._multitask or n_layers == 1:
-                logits = logit_list[-1] 
+                logits = logit_list[-1]
                 # loss = self._loss(logits, label.long().view(-1))
                 loss = self._loss(logits,  label.long().view(-1))
+                best_logits = best_logits_max = logits
             else:
                 nonzero_mask = torch.ones(input_mask.size()[0], dtype=torch.bool).cuda()
+                margin_nonzero_mask = torch.ones(input_mask.size()[0], dtype=torch.bool).cuda()
+                best_logits = logit_list[-1].clone()
+                best_logits_max = logit_list[-1].clone()
                 for i in range(n_layers):
                     logits = logit_list[i]
                     # todo WHY do labels need to be computed in here??
                     loss = self._loss(logits, label.long().view(-1))
                     if self.early_exit_during_training:
+
+                        # set best_logits
+                        # technically this doesn't exactly correspond to test time -- we replace with logits from later layer
+                        # that also satisfy the condition (so predictions could get better / worse if they change between layers)
+                        # print("loss == 0", loss == 0)
+                        # print("nonzero mask", nonzero_mask)
+                        has_margin_mask = self.has_margin(logits)
+                        best_logits[(loss == 0) & nonzero_mask] = logits[(loss == 0) & nonzero_mask]
+                        best_logits_max[has_margin_mask & margin_nonzero_mask] = logits[has_margin_mask & margin_nonzero_mask]
+
                         # this only works with MultiMarginLoss: if loss == 0, then we had a margin w/ gold label
+
+                        # this is 1 where loss != 0, 0 elsewhere
                         loss_nonzero_bool = loss != 0
+
+                        # update mask to zero out current zero locations
                         nonzero_mask = nonzero_mask * loss_nonzero_bool
+                        margin_nonzero_mask = margin_nonzero_mask * ~has_margin_mask
+
+                        # only gather losses that were nonzero in all prev layers
                         loss_nonzero = loss[nonzero_mask].sum()
                         loss = loss_nonzero
+
                     loss_list.append(loss)
 
             if not self.training and len(self._layer_indices) > 1 and self._debug:
@@ -229,11 +265,12 @@ class MultilossBertForClassification(MultilossBert):
 
             # Ensebmle
             if ensemble is not None:
-                logits = ensemble
+                best_logits = ensemble
 
-            self._accuracy(logits, label)
+            self._accuracy(best_logits, label)
+            self._accuracy_max(best_logits_max, label)
 
-            output_dict['probs'] = torch.nn.functional.softmax(logits, dim=-1)
+            output_dict['probs'] = torch.nn.functional.softmax(best_logits, dim=-1)
             output_dict['logits'] = logit_list
 
             if self._multitask or n_layers == 1:
@@ -300,7 +337,8 @@ class MultilossBertForClassification(MultilossBert):
 
     def get_metrics(self, reset: bool = False) -> Dict[str, float]:
         counts = self._count_n_layers.get_metric(False) 
-        metrics = {'accuracy': self._accuracy.get_metric(reset), 'thr': self._temperature_threshold}
+        metrics = {'accuracy': self._accuracy.get_metric(reset), 'thr': self._temperature_threshold,
+                   'accuracy_max': self._accuracy_max.get_metric(reset)}
         for i,l in enumerate(self._layer_indices):
            metrics['n_layers_'+str(l)] = counts[i]
         

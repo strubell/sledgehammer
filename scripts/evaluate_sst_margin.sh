@@ -23,7 +23,7 @@ conf_end=$( bc -l <<< "$margin * 200" )
 conf_by=$( bc -l <<< "$margin * 5" )
 
 for confidence in $( seq $conf_start $conf_by $conf_end ); do
-#for confidence in $( seq 55 5 100 ); do
+#for confidence in 100; do
   python scripts/run_evaluation.py  \
   -t $temperatures \
   -c $( bc -l <<< "$confidence / 100" ) \

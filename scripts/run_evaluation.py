@@ -28,7 +28,7 @@ def main():
     cmd = "python allennlp_overrides/commands/evaluate.py {} {} ".format(serialization_dir, args.dev_file) + \
         "--include-package allennlp_overrides --cuda-device {} ".format(args.cuda_device) + \
         " -o "+'"{'+" iterator: "+'{'+"batch_size: 1"+'}'+", model: "+'{'+\
-            "temperature_threshold: {}, scaling_temperature: '{}'".format(args.confidence_threshold, args.temperatures)+\
+            "temperature_threshold: {}, scaling_temperature: '{}', gold_exit_during_test: {}".format(args.confidence_threshold, args.temperatures, args.gold_exit_during_test)+\
             '}}"'+" --weights-file {} -t \"{}\" --output-file {};".format(
             args.model_file, args.confidence_threshold, args.output_file)
 
@@ -53,7 +53,9 @@ def arg_parser():
     p.add_argument('-v', '--dev_file', help="Development set file",  type=str, required=True)
     p.add_argument('-m', '--model_file', help="Model file",  type=str, required=True)
     p.add_argument('-o', '--output_file', help="Output file",  type=str, required=True)
-
+    # p.add_argument('--gold_exit_during_test', help="Exit when condition met w/ gold label at test time",  dest='gold_exit_during_test', action='store_true')
+    # p.set_defaults(gold_exit_during_test=False)
+    p.add_argument('--gold_exit_during_test', help="Exit when condition met w/ gold label at test time", type=str, default="false")
 
     return  ArgumentParser(description=__doc__,
                             formatter_class=ArgumentDefaultsHelpFormatter,
