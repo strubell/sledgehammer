@@ -18,9 +18,9 @@ model_dir="$working_dir/$experiment/$bert_model/$dataset/experiment_${layers}_0"
 # dummy temps
 temperatures="1_1_1_1"
 
-conf_start=$( bc -l <<< "$margin * 50" )
+conf_start=$( bc -l <<< "$margin * 10" )
 conf_end=$( bc -l <<< "$margin * 200" )
-conf_by=$( bc -l <<< "$margin * 5" )
+conf_by=$( bc -l <<< "$margin * 10" )
 
 for confidence in $( seq $conf_start $conf_by $conf_end ); do
 #for confidence in 100; do
