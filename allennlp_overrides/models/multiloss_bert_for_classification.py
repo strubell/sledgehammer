@@ -50,6 +50,7 @@ class MultilossBertForClassification(MultilossBert):
                  margin: float = 1.0,
                  share_classifiers: bool = False,
                  early_exit_during_training: bool = False,
+                 earliest_exit_during_test: bool = False,
                  gold_exit_during_test: bool = False,
                  pool_layers: bool = True,
                  dropout: float = 0.0,
@@ -81,6 +82,7 @@ class MultilossBertForClassification(MultilossBert):
         print("training w/ loss: {}".format(self.loss))
 
         self.gold_exit_during_test = gold_exit_during_test
+        self.earliest_exit_during_test = earliest_exit_during_test
 
         self.share_classifiers = share_classifiers
         num_classifiers = len(self._layer_indices)
@@ -120,11 +122,24 @@ class MultilossBertForClassification(MultilossBert):
                 diff = label_val - top2_vals[0][0]
         return diff >= m
 
+    def earliest_exit(self, logits, label):
+        argmax = logits.argmax()
+        return argmax == label
+
     def early_exit_xent(self, probs, thr, label=None):
         if label:
-            return probs[0][label] >= thr
+            argmax = probs.argmax()
+            return label == argmax and probs[0][label] >= thr
         else:
             return torch.max(probs) >= thr
+
+    def do_early_exit(self, loss_fn, logits=None, thr=None, probs=None, label=None):
+        if loss_fn == "CrossEntropyLoss":
+            return self.early_exit_xent(probs, thr, label)
+        if loss_fn == "MultiMarginLoss":
+            return self.has_margin(logits, thr, label)
+        if loss_fn == "EarliestExit":
+            return self.earliest_exit(logits, label)
 
     def forward(self,  # type: ignore
                 tokens: Dict[str, torch.LongTensor],
@@ -176,12 +191,18 @@ class MultilossBertForClassification(MultilossBert):
 
             if self.ensemble is not None:
                 ensemble = self.ensemble[0]*copy.deepcopy(probs)
-            elif self.loss == "CrossEntropyLoss" and ((gold_layer is None and self.early_exit_xent(probs, self._temperature_threshold, label if self.gold_exit_during_test else None)) or \
-                    (gold_layer is not None and gold_layer == 0)):
+            elif (gold_layer is None and self.do_early_exit("EarliestExit" if self.earliest_exit else self.loss,
+                                                            logits=logits,
+                                                            probs=probs, thr=self._temperature_threshold,
+                                                            label=label if self.gold_exit_during_test else None)) or \
+                    (gold_layer is not None and gold_layer == i):
                 n_layers = 1
-            elif self.loss == "MultiMarginLoss" and ((gold_layer is None and self.has_margin(logits, self._temperature_threshold, label if self.gold_exit_during_test else None)) or \
-                    (gold_layer is not None and gold_layer == 0)):
-                n_layers = 1
+            # elif self.loss == "CrossEntropyLoss" and ((gold_layer is None and self.early_exit_xent(probs, self._temperature_threshold, label if self.gold_exit_during_test else None)) or \
+            #         (gold_layer is not None and gold_layer == 0)):
+            #     n_layers = 1
+            # elif self.loss == "MultiMarginLoss" and ((gold_layer is None and self.has_margin(logits, self._temperature_threshold, label if self.gold_exit_during_test else None)) or \
+            #         (gold_layer is not None and gold_layer == 0)):
+            #     n_layers = 1
 #            print("li{}: logits={}, probs={}, thr={}".format(0, logits, probs, self._temperature_threshold))
         elif self._multitask:
             n_layers = random.randint(1,n_layers)
@@ -199,16 +220,22 @@ class MultilossBertForClassification(MultilossBert):
                 # Ensemble: checking that current prediction equals the previous predictions
                 if ensemble is not None:
                     ensemble += self.ensemble[i]*probs
+                elif (gold_layer is None and self.do_early_exit("EarliestExit" if self.earliest_exit else self.loss, logits=logits,
+                                                                probs=probs, thr=self._temperature_threshold,
+                                                                label=label if self.gold_exit_during_test else None)) or \
+                     (gold_layer is not None and gold_layer == i):
+                    n_layers = i + 1
+                    break
                 # old method w/ xent loss checks temp
-                elif self.loss == "CrossEntropyLoss" and ((gold_layer is None and self.early_exit_xent(probs, self._temperature_threshold, label if self.gold_exit_during_test else None)) or \
-                    (gold_layer is not None and gold_layer == i)):
-                    n_layers = i+1
-                    break
-                # new method w/ margin loss checks margin
-                elif self.loss == "MultiMarginLoss" and ((gold_layer is None and self.has_margin(logits, self._temperature_threshold, label if self.gold_exit_during_test else None)) or \
-                    (gold_layer is not None and gold_layer == i)):
-                    n_layers = i+1
-                    break
+                # elif self.loss == "CrossEntropyLoss" and ((gold_layer is None and self.early_exit_xent(probs, self._temperature_threshold, label if self.gold_exit_during_test else None)) or \
+                #     (gold_layer is not None and gold_layer == i)):
+                #     n_layers = i+1
+                #     break
+                # # new method w/ margin loss checks margin
+                # elif self.loss == "MultiMarginLoss" and ((gold_layer is None and self.has_margin(logits, self._temperature_threshold, label if self.gold_exit_during_test else None)) or \
+                #     (gold_layer is not None and gold_layer == i)):
+                #     n_layers = i+1
+                #     break
 
         if not self.training:
             self._count_n_layers(n_layers)
@@ -267,10 +294,16 @@ class MultilossBertForClassification(MultilossBert):
             if ensemble is not None:
                 best_logits = ensemble
 
-            self._accuracy(best_logits, label)
-            self._accuracy_max(best_logits_max, label)
+            if self.training and self.early_exit_during_training:
+                self._accuracy(best_logits, label)
+                self._accuracy_max(best_logits_max, label)
+                output_dict['probs'] = torch.nn.functional.softmax(best_logits, dim=-1)
 
-            output_dict['probs'] = torch.nn.functional.softmax(best_logits, dim=-1)
+            else:
+                self._accuracy(logits, label)
+                self._accuracy_max(logits, label)
+                output_dict['probs'] = torch.nn.functional.softmax(logits, dim=-1)
+
             output_dict['logits'] = logit_list
 
             if self._multitask or n_layers == 1:
